@@ -200,6 +200,61 @@
         opacity: 0.9;
       }
 
+      /* 待办事项样式 */
+      .todo-section {
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 2px solid rgba(255, 107, 157, 0.3);
+      }
+
+      .todo-title {
+        color: #ff6b9d;
+        font-size: 1.8rem;
+        margin-bottom: 1.5rem;
+        font-weight: bold;
+      }
+
+      .todo-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .todo-item {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 15px;
+        padding: 1rem 1.5rem;
+        margin: 1rem 0;
+        color: #ff6b9d;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(255, 107, 157, 0.1);
+      }
+
+      .todo-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(255, 107, 157, 0.2);
+        background: rgba(255, 255, 255, 0.4);
+      }
+
+      .todo-icon {
+        font-size: 1.5rem;
+        animation: bounce 2s ease-in-out infinite;
+      }
+
+      @keyframes bounce {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-5px);
+        }
+      }
+
       /* 响应式设计 */
       @media (max-width: 768px) {
         .container {
@@ -350,6 +405,28 @@
       </div>
 
       <p class="subtitle">愿这首歌声伴随我们的每一个美好时刻 💕</p>
+
+      <!-- 待办事项列表 -->
+      <div class="todo-section">
+        <h2 class="todo-title">💝 未来的小心愿 💝</h2>
+        <ul class="todo-list">
+          <li class="todo-item">
+            <span class="todo-icon">⛷️</span>
+            <span>去北京颐和园滑冰</span>
+          </li>
+
+          <li class="todo-item">
+            <span class="todo-icon">💈</span>
+            <span>过年一起烫头</span>
+          </li>
+
+          <li class="todo-item">
+            <span class="todo-icon">🏖️</span>
+            <span>去海边手牵手漫步沙滩</span>
+          </li>
+          
+        </ul>
+      </div>
     </div>
 
     <script>
