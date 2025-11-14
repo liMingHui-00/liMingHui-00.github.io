@@ -255,6 +255,156 @@
         }
       }
 
+      /* 爱情小游戏样式 */
+      .love-game-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          135deg,
+          rgba(255, 154, 158, 0.95) 0%,
+          rgba(254, 207, 239, 0.95) 50%,
+          rgba(254, 207, 239, 0.95) 100%
+        );
+        backdrop-filter: blur(10px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        animation: fadeIn 1s ease-out;
+      }
+
+      .love-game-container {
+        text-align: center;
+        background: rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(15px);
+        border-radius: 30px;
+        padding: 3rem 2rem;
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        max-width: 500px;
+        width: 90%;
+        animation: scaleIn 0.8s ease-out;
+      }
+
+      @keyframes scaleIn {
+        from {
+          opacity: 0;
+          transform: scale(0.8);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      .love-game-title {
+        color: #ff6b9d;
+        font-size: 2.5rem;
+        margin-bottom: 2rem;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        animation: heartbeat 2s ease-in-out infinite;
+      }
+
+      .love-game-question {
+        color: #ff6b9d;
+        font-size: 1.5rem;
+        margin-bottom: 2.5rem;
+        font-weight: bold;
+        line-height: 1.4;
+      }
+
+      .love-game-buttons {
+        display: flex;
+        gap: 2rem;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .love-btn, .no-love-btn {
+        padding: 1rem 2rem;
+        border: none;
+        border-radius: 25px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .love-btn {
+        background: linear-gradient(135deg, #ff6b9d, #ff9a9e);
+        color: white;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        animation: pulse 2s ease-in-out infinite;
+      }
+
+      .love-btn:hover {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 15px 30px rgba(255, 107, 157, 0.3);
+        background: linear-gradient(135deg, #ff5a8a, #ff8b8f);
+      }
+
+      .no-love-btn {
+        background: rgba(255, 255, 255, 0.6);
+        color: #ff6b9d;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .no-love-btn:hover {
+        background: rgba(255, 255, 255, 0.8);
+        transform: translateY(-2px);
+        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+      }
+
+      .love-btn.grow {
+        animation: growBig 0.5s ease-out forwards;
+      }
+
+      @keyframes growBig {
+        to {
+          transform: scale(1.3);
+          font-size: 1.4rem;
+          padding: 1.2rem 2.5rem;
+        }
+      }
+
+      .shake {
+        animation: shake 0.5s ease-in-out;
+      }
+
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-10px); }
+        75% { transform: translateX(10px); }
+      }
+
+      .main-content {
+        display: none;
+      }
+
+      .main-content.show {
+        display: block;
+        animation: fadeInUp 1s ease-out;
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
       /* 响应式设计 */
       @media (max-width: 768px) {
         .container {
@@ -274,10 +424,51 @@
         audio {
           width: 250px;
         }
+
+        .love-game-container {
+          padding: 2rem 1.5rem;
+        }
+
+        .love-game-title {
+          font-size: 2rem;
+        }
+
+        .love-game-question {
+          font-size: 1.3rem;
+        }
+
+        .love-game-buttons {
+          flex-direction: column;
+          gap: 1.5rem;
+        }
+
+        .love-btn, .no-love-btn {
+          width: 100%;
+          max-width: 200px;
+        }
       }
     </style>
   </head>
   <body>
+    <!-- 爱情小游戏弹窗 -->
+    <div class="love-game-overlay" id="loveGameOverlay">
+      <div class="love-game-container">
+        <h1 class="love-game-title">💖 小宝贝 💖</h1>
+        <p class="love-game-question">
+          你爱我吗？💕<br>
+          <small style="font-size: 0.9em; opacity: 0.8;">（请诚实回答哦～）</small>
+        </p>
+        <div class="love-game-buttons">
+          <button class="love-btn" id="loveBtn" onclick="chooseLove()">
+            💖 爱你 💖
+          </button>
+          <button class="no-love-btn" id="noLoveBtn" onclick="chooseNoLove()">
+            💔 不爱 💔
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- 飘落的爱心动画 -->
     <div class="hearts">
       <div class="heart" style="left: 10%; animation-delay: 0s">💕</div>
@@ -291,7 +482,7 @@
       <div class="heart" style="left: 90%; animation-delay: 2.2s">💝</div>
     </div>
 
-    <div class="container">
+    <div class="container main-content" id="mainContent">
       <!-- 歌曲 -->
       <p class="subtitle">就是爱你💕</p>
       <div class="audio-container">
@@ -434,6 +625,7 @@
       let heartsInterval;
       let audio;
       let autoplayAttempted = false;
+      let noLoveClickCount = 0;
 
       // 智能自动播放函数
       async function attemptAutoplay() {
@@ -535,29 +727,87 @@
         }, 5000);
       }
 
+      // 爱情小游戏函数
+      function chooseLove() {
+        // 播放成功音效（如果有的话）
+        const overlay = document.getElementById('loveGameOverlay');
+        const mainContent = document.getElementById('mainContent');
+        
+        // 添加消失动画
+        overlay.style.animation = 'fadeOut 0.8s ease-out forwards';
+        
+        setTimeout(() => {
+          overlay.style.display = 'none';
+          mainContent.classList.add('show');
+          
+          // 开始音频播放和动画
+          heartsInterval = setInterval(createHeart, 800);
+          attemptAutoplay();
+        }, 800);
+      }
+
+      function chooseNoLove() {
+        noLoveClickCount++;
+        const loveBtn = document.getElementById('loveBtn');
+        const noLoveBtn = document.getElementById('noLoveBtn');
+        const gameContainer = document.querySelector('.love-game-container');
+        
+        // 让"爱"按钮变大
+        loveBtn.classList.add('grow');
+        
+        // 让整个容器震动
+        gameContainer.classList.add('shake');
+        
+        // 更新问题文本，变得更加调皮
+        const question = document.querySelector('.love-game-question');
+        const messages = [
+          '真的不爱我吗？😢<br><small style="font-size: 0.9em; opacity: 0.8;">（再想想嘛～）</small>',
+          '不可能！你一定是爱我的！💕<br><small style="font-size: 0.9em; opacity: 0.8;">（点错了对不对？）</small>',
+          '我不信！你肯定爱我！😤<br><small style="font-size: 0.9em; opacity: 0.8;">（快点击爱我吧！）</small>',
+          '你看，爱的按钮都变大了！💖<br><small style="font-size: 0.9em; opacity: 0.8;">（这是命运的暗示！）</small>',
+          '不许不爱我！😭<br><small style="font-size: 0.9em; opacity: 0.8;">（快点击爱我，不然我要哭了！）</small>'
+        ];
+        
+        if (noLoveClickCount <= messages.length) {
+          question.innerHTML = messages[Math.min(noLoveClickCount - 1, messages.length - 1)];
+        }
+        
+        // 如果点击次数过多，让"不爱"按钮开始缩小
+        if (noLoveClickCount > 3) {
+          noLoveBtn.style.transform = `scale(${Math.max(0.5, 1 - (noLoveClickCount - 3) * 0.1)})`;
+          noLoveBtn.style.opacity = Math.max(0.3, 1 - (noLoveClickCount - 3) * 0.1);
+        }
+        
+        // 移除动画类，以便下次可以重新触发
+        setTimeout(() => {
+          loveBtn.classList.remove('grow');
+          gameContainer.classList.remove('shake');
+        }, 500);
+      }
+
+      // 添加淡出动画
+      const fadeOutKeyframes = `
+        @keyframes fadeOut {
+          from {
+            opacity: 1;
+            transform: scale(1);
+          }
+          to {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+        }
+      `;
+      
+      // 动态添加CSS动画
+      const style = document.createElement('style');
+      style.textContent = fadeOutKeyframes;
+      document.head.appendChild(style);
+
       // 页面加载完成后的初始化
       document.addEventListener("DOMContentLoaded", function () {
-        // 立即开始爱心动画
-        heartsInterval = setInterval(createHeart, 800);
-
-        // 立即尝试自动播放音频
-        attemptAutoplay();
-
-        // 监听页面可见性变化，确保在页面可见时播放
-        document.addEventListener("visibilitychange", function () {
-          if (!document.hidden && audio && audio.paused) {
-            attemptAutoplay();
-          }
-        });
-
-        // 页面获得焦点时也尝试播放
-        window.addEventListener("focus", function () {
-          if (audio && audio.paused) {
-            attemptAutoplay();
-          }
-        });
-
-        console.log("页面初始化完成，已尝试自动播放");
+        // 不立即开始动画，等待用户选择"爱"
+        console.log("页面初始化完成，等待用户互动");
       });
     </script>
   </body>
