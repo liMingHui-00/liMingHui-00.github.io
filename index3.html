@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>数字点击挑战</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    
+    <style>
+        body {
+            touch-action: manipulation;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        .number-cell { 
+            transition: all 0.2s ease; 
+            -webkit-tap-highlight-color: transparent;
+            min-height: 50px;
+            font-size: 18px;
+        }
+        @media (max-width: 400px) {
+            .number-cell {
+                min-height: 40px;
+                font-size: 16px;
+            }
+        }
+        .number-cell:active { 
+            transform: scale(0.98); 
+        }
+        .confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        .encouragement-text {
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        /* 微信适配 */
+        .wechat-tip {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen flex flex-col items-center justify-center p-2">
+    <div class="confetti-container" id="confetti-container"></div>
+    
+    <div class="w-full max-w-md bg-white rounded-xl shadow-lg overflow-hidden mx-auto">
+        <!-- 音效开关 -->
+        <div class="bg-gray-50 p-2 flex justify-end items-center">
+            <button id="sound-toggle" class="flex items-center text-gray-500 hover:text-blue-500 transition-colors p-1 rounded">
+                <i class="fa fa-volume-off mr-1" id="sound-icon"></i>
+                <span class="text-xs">音效</span>
+            </button>
+        </div>
+        
+        <!-- 标题区 -->
+        <div class="bg-blue-500 text-white p-4">
+            <h1 class="text-center font-bold text-xl flex items-center justify-center">
+                <i class="fa fa-trophy mr-2 text-yellow-300"></i>
+                数字点击挑战
+            </h1>
+            <p class="text-center text-sm text-blue-100 mt-1">40秒内按顺序点击1-25</p>
+        </div>
+        
+        <!-- 数据统计 -->
+        <div class="grid grid-cols-3 gap-2 p-3 bg-gray-50 border-b border-gray-200">
+            <div class="text-center">
+                <div class="text-xs text-gray-500">当前目标</div>
+                <div id="current-number" class="text-xl font-bold text-blue-500">1</div>
+            </div>
+            <div class="text-center">
+                <div class="text-xs text-gray-500">剩余时间</div>
+                <div id="timer" class="text-xl font-bold text-red-500">40</div>
+            </div>
+            <div class="text-center">
+                <div class="text-xs text-gray-500">最终得分</div>
+                <div id="score" class="text-xl font-bold text-purple-500">0</div>
+            </div>
+        </div>
+        
+        <!-- 游戏内容 -->
+        <div class="p-3">
+            <!-- 开始界面 -->
+            <div id="start-screen" class="text-center py-6">
+                <h2 class="font-bold text-lg mb-3">准备开始挑战</h2>
+                <p class="text-sm text-gray-600 mb-5 px-4">按顺序点击1到25，越快越准确得分越高！</p>
+                <button id="start-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full shadow transform hover:scale-105 transition duration-200">
+                    <i class="fa fa-play mr-2"></i> 开始挑战
+                </button>
+            </div>
+            
+            <!-- 游戏网格 -->
+            <div id="game-grid" class="grid grid-cols-5 gap-2 hidden"></div>
+            
+            <!-- 结束界面 -->
+            <div id="end-screen" class="text-center py-6 hidden">
+                <div id="perfect-score-icon" class="hidden w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa fa-star text-white text-2xl"></i>
+                </div>
+                <div id="excellent-icon" class="hidden w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa fa-trophy text-white text-2xl"></i>
+                </div>
+                <div id="good-icon" class="hidden w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa fa-check text-white text-2xl"></i>
+                </div>
+                <div id="no-score-icon" class="w-16 h-16 bg-gray-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa fa-times text-white text-2xl"></i>
+                </div>
+                
+                <h2 id="end-message" class="font-bold text-xl mb-2">挑战结束</h2>
+                <p class="text-gray-700 mb-1 text-lg">最终得分: <span id="final-score" class="font-bold text-purple-500 text-3xl">0</span></p>
+                <p id="encouragement" class="text-green-500 font-bold text-base mb-3 hidden encouragement-text">加油！你一定可以的！</p>
+                <p class="text-sm text-gray-500 mb-5">用时 <span id="used-time">0</span> 秒 | 点击 <span id="click-count">0</span> 次 | 完成至 <span id="complete-to">0</span></p>
+                
+                <button id="restart-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full shadow transform hover:scale-105 transition duration-200">
+                    <i class="fa fa-refresh mr-2"></i> 再次挑战
+                </button>
+            </div>
+            
+            <!-- 高分榜 -->
+            <div id="high-scores-container" class="mt-4 p-3 bg-gray-50 rounded-lg"></div>
+        </div>
+    </div>
+    
+    <footer class="mt-4 text-center text-gray-500 text-xs">
+        <p>© 2025 数字点击挑战 | 微信适配版</p>
+    </footer>
+
+    <script>
+        // 微信环境检测
+        const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+        let soundEnabled = false; // 微信默认关闭音效
+        let gameStarted = false;
+        let currentNumber = 1;
+        let totalTime = 40;
+        let remainingTime = totalTime;
+        let finalScore = 0;
+        let timerInterval;
+        let clickHistory = [];
+        
+        // 音频资源（微信延迟加载）
+        let sounds = {};
+        
+        // DOM元素
+        const startScreen = document.getElementById('start-screen');
+        const gameGrid = document.getElementById('game-grid');
+        const endScreen = document.getElementById('end-screen');
+        const startButton = document.getElementById('start-button');
+        const restartButton = document.getElementById('restart-button');
+        const currentNumberEl = document.getElementById('current-number');
+        const timerEl = document.getElementById('timer');
+        const scoreEl = document.getElementById('score');
+        const finalScoreEl = document.getElementById('final-score');
+        const endMessageEl = document.getElementById('end-message');
+        const usedTimeEl = document.getElementById('used-time');
+        const clickCountEl = document.getElementById('click-count');
+        const completeToEl = document.getElementById('complete-to');
+        const soundToggle = document.getElementById('sound-toggle');
+        const soundIcon = document.getElementById('sound-icon');
+        const encouragementText = document.getElementById('encouragement');
+        
+        const perfectScoreIcon = document.getElementById('perfect-score-icon');
+        const excellentIcon = document.getElementById('excellent-icon');
+        const goodIcon = document.getElementById('good-icon');
+        const noScoreIcon = document.getElementById('no-score-icon');
+        
+        // 微信音频初始化（用户交互后加载）
+        function initSounds() {
+            if (soundEnabled && Object.keys(sounds).length === 0) {
+                sounds = {
+                    click: new Audio('https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3'),
+                    complete: new Audio('https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3'),
+                    success: new Audio('https://assets.mixkit.co/sfx/preview/mixkit-positive-notification-937.mp3')
+                };
+                
+                // 微信音频预加载
+                Object.values(sounds).forEach(sound => {
+                    sound.preload = 'auto';
+                    sound.volume = 0.3;
+                });
+            }
+        }
+        
+        // 播放音效（微信兼容）
+        const playSound = (soundName) => {
+            if (!soundEnabled || !sounds[soundName]) return;
+            
+            try {
+                const sound = sounds[soundName].cloneNode();
+                sound.play().catch(e => {
+                    // 微信播放失败时静默处理
+                    console.log('微信音效播放限制:', e);
+                });
+            } catch (e) {}
+        };
+        
+        // 音效开关切换
+        soundToggle.addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            
+            if (soundEnabled) {
+                soundIcon.className = 'fa fa-volume-up mr-1';
+                soundToggle.classList.add('text-blue-500');
+                initSounds(); // 用户交互后初始化音频
+            } else {
+                soundIcon.className = 'fa fa-volume-off mr-1';
+                soundToggle.classList.remove('text-blue-500');
+            }
+        });
+        
+        // 烟花特效
+        const launchConfetti = () => {
+            const duration = 5000;
+            const animationEnd = Date.now() + duration;
+            
+            const randomInRange = (min, max) => Math.random() * (max - min) + min;
+            
+            const interval = setInterval(() => {
+                const timeLeft = animationEnd - Date.now();
+                if (timeLeft <= 0) return clearInterval(interval);
+                
+                const particleCount = 30 * (timeLeft / duration);
+                
+                confetti({
+                    particleCount,
+                    startVelocity: 25,
+                    spread: 360,
+                    origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+                    colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00']
+                });
+                
+                confetti({
+                    particleCount,
+                    startVelocity: 25,
+                    spread: 360,
+                    origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+                    colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00']
+                });
+            }, 300);
+        };
+        
+        // 生成随机数字
+        const generateRandomNumbers = () => {
+            const numbers = Array.from({length: 25}, (_, i) => i + 1);
+            for (let i = numbers.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+            }
+            return numbers;
+        };
+        
+        // 创建游戏网格
+        const createGameGrid = () => {
+            gameGrid.innerHTML = '';
+            const numbers = generateRandomNumbers();
+            
+            numbers.forEach(num => {
+                const cell = document.createElement('div');
+                cell.className = 'number-cell bg-gray-100 hover:bg-gray-200 rounded-md flex items-center justify-center font-bold cursor-pointer shadow-sm';
+                cell.dataset.number = num;
+                cell.textContent = num;
+                
+                // 统一点击处理
+                const handleInteraction = () => {
+                    if (!gameStarted) return;
+                    
+                    playSound('click');
+                    const number = parseInt(cell.dataset.number);
+                    clickHistory.push(number);
+                    
+                    if (number === currentNumber) {
+                        playSound('success');
+                        currentNumber++;
+                        currentNumberEl.textContent = currentNumber <= 25 ? currentNumber : '-';
+                        
+                        if (currentNumber > 25) {
+                            playSound('complete');
+                            endGame();
+                        }
+                    }
+                };
+                
+                // 绑定所有事件类型
+                cell.addEventListener('click', handleInteraction);
+                cell.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    handleInteraction();
+                }, {passive: false});
+                cell.addEventListener('touchend', (e) => e.preventDefault(), {passive: false});
+                
+                gameGrid.appendChild(cell);
+            });
+        };
+        
+        // 计算得分
+        const calculateScore = () => {
+            const isCompleted = currentNumber > 25;
+            const usedTime = totalTime - remainingTime;
+            const clickCount = clickHistory.length;
+            
+            if (!isCompleted) return 0;
+            
+            if (usedTime <= 20 && clickCount === 25) return 100;
+            else if (usedTime <= 25 && clickCount <= 27) return 90;
+            else if (usedTime <= 30 && clickCount <= 29) return 80;
+            else if (usedTime <= 35 && clickCount <= 30) return 70;
+            else if (usedTime <= 40 && clickCount <= 33) return 60;
+            else return 50;
+        };
+        
+        // 更新计时器
+        const updateTimer = () => {
+            remainingTime--;
+            timerEl.textContent = remainingTime;
+            
+            if (remainingTime <= 10) {
+                timerEl.classList.add('animate-pulse');
+                timerEl.classList.add('text-red-600');
+            }
+            
+            if (remainingTime <= 0) {
+                endGame();
+            }
+        };
+        
+        // 开始游戏
+        const startGame = () => {
+            // 微信首次点击初始化音效
+            if (isWeChat && soundEnabled && Object.keys(sounds).length === 0) {
+                initSounds();
+            }
+            
+            currentNumber = 1;
+            remainingTime = totalTime;
+            clickHistory = [];
+            gameStarted = true;
+            
+            currentNumberEl.textContent = currentNumber;
+            timerEl.textContent = remainingTime;
+            timerEl.classList.remove('animate-pulse', 'text-red-600');
+            scoreEl.textContent = "0";
+            
+            createGameGrid();
+            startScreen.classList.add('hidden');
+            endScreen.classList.add('hidden');
+            gameGrid.classList.remove('hidden');
+            
+            clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 1000);
+            
+            playSound('click');
+        };
+        
+        // 结束游戏
+        const endGame = () => {
+            gameStarted = false;
+            clearInterval(timerInterval);
+            
+            finalScore = calculateScore();
+            const isCompleted = currentNumber > 25;
+            const usedTime = totalTime - remainingTime;
+            
+            finalScoreEl.textContent = finalScore;
+            usedTimeEl.textContent = usedTime;
+            clickCountEl.textContent = clickHistory.length;
+            completeToEl.textContent = currentNumber - 1;
+            
+            encouragementText.classList.toggle('hidden', finalScore !== 0);
+            
+            if (finalScore === 100) {
+                launchConfetti();
+            }
+            
+            if (isCompleted) {
+                endMessageEl.textContent = finalScore === 100 ? "完美极速通关！" : "挑战完成！";
+                perfectScoreIcon.classList.toggle('hidden', finalScore !== 100);
+                excellentIcon.classList.toggle('hidden', finalScore < 90 || finalScore === 100);
+                goodIcon.classList.toggle('hidden', finalScore < 60 || finalScore >= 90);
+                noScoreIcon.classList.add('hidden');
+                saveHighScore(finalScore);
+            } else {
+                endMessageEl.textContent = "时间到！未完成挑战";
+                perfectScoreIcon.classList.add('hidden');
+                excellentIcon.classList.add('hidden');
+                goodIcon.classList.add('hidden');
+                noScoreIcon.classList.remove('hidden');
+            }
+            
+            gameGrid.classList.add('hidden');
+            endScreen.classList.remove('hidden');
+            
+            setTimeout(() => {
+                endScreen.classList.add('hidden');
+                startScreen.classList.remove('hidden');
+                showHighScores();
+            }, 5000);
+        };
+        
+        // 保存高分记录
+        const saveHighScore = (score) => {
+            try {
+                const highScores = JSON.parse(localStorage.getItem('numberGameHighScores') || '[]');
+                
+                highScores.push({
+                    score: score,
+                    date: new Date().toISOString(),
+                    time: totalTime - remainingTime,
+                    clicks: clickHistory.length
+                });
+                
+                highScores.sort((a, b) => b.score - a.score).splice(10);
+                localStorage.setItem('numberGameHighScores', JSON.stringify(highScores));
+            } catch (e) {}
+        };
+        
+        // 显示高分榜
+        const showHighScores = () => {
+            const container = document.getElementById('high-scores-container');
+            const highScores = JSON.parse(localStorage.getItem('numberGameHighScores') || '[]');
+            
+            let html = `
+                <h3 class="text-sm font-bold mb-2 flex items-center">
+                    <i class="fa fa-trophy text-yellow-500 mr-1"></i> 历史最高分
+                </h3>
+            `;
+            
+            if (highScores.length === 0) {
+                html += '<p class="text-xs text-gray-500 text-center py-2">暂无游戏记录</p>';
+            } else {
+                html += '<div class="grid grid-cols-4 gap-1 text-xs mb-2">';
+                html += '<div class="font-bold bg-gray-100 p-1 rounded">排名</div>';
+                html += '<div class="font-bold bg-gray-100 p-1 rounded">得分</div>';
+                html += '<div class="font-bold bg-gray-100 p-1 rounded">用时</div>';
+                html += '<div class="font-bold bg-gray-100 p-1 rounded">日期</div>';
+                
+                highScores.forEach((score, index) => {
+                    const date = new Date(score.date);
+                    const formattedDate = `${date.getMonth()+1}/${date.getDate()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+                    
+                    const rankStyle = index === 0 
+                        ? 'bg-yellow-50 text-yellow-600 font-bold' 
+                        : index === 1 
+                            ? 'bg-gray-100 text-gray-600 font-bold' 
+                            : index === 2 
+                                ? 'bg-amber-50 text-amber-600 font-bold' 
+                                : 'bg-white';
+                    
+                    html += `<div class="text-center p-1 rounded ${rankStyle}">${index+1}</div>`;
+                    html += `<div class="text-center p-1 font-bold text-purple-500">${score.score}</div>`;
+                    html += `<div class="text-center p-1">${score.time}s</div>`;
+                    html += `<div class="text-center p-1 text-gray-500">${formattedDate}</div>`;
+                });
+                
+                html += '</div>';
+                html += `
+                    <button id="clear-scores" class="mt-2 text-xs text-gray-500 hover:text-red-500 flex items-center justify-center py-1">
+                        <i class="fa fa-trash-o mr-1"></i> 清空记录
+                    </button>
+                `;
+            }
+            
+            container.innerHTML = html;
+            
+            const clearBtn = document.getElementById('clear-scores');
+            if (clearBtn) {
+                clearBtn.addEventListener('click', () => {
+                    if (confirm('确定清空记录？')) {
+                        localStorage.removeItem('numberGameHighScores');
+                        showHighScores();
+                        playSound('click');
+                    }
+                });
+            }
+        };
+        
+        // 绑定事件（微信需要用户交互）
+        startButton.addEventListener('click', startGame);
+        restartButton.addEventListener('click', startGame);
+        
+        // 微信滚动锁定
+        if (isWeChat) {
+            document.addEventListener('touchmove', (e) => {
+                if (gameStarted) e.preventDefault();
+            }, {passive: false});
+        }
+        
+        // 初始化
+        showHighScores();
+        
+        // 微信提示（可选）
+        if (isWeChat) {
+            console.log('微信环境，已启用兼容模式');
+        }
+    </script>
+</body>
+</html>
