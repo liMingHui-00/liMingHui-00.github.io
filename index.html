@@ -1,814 +1,523 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>❤️ 我的宝贝 ❤️</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>数字点击挑战</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      body {
-        font-family: "Microsoft YaHei", Arial, sans-serif;
-        background: linear-gradient(
-          135deg,
-          #ff9a9e 0%,
-          #fecfef 50%,
-          #fecfef 100%
-        );
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        overflow-x: hidden;
-        position: relative;
-      }
-
-      /* 浪漫的背景动画 */
-      body::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-image: radial-gradient(
-            circle at 25% 25%,
-            rgba(255, 255, 255, 0.1) 0%,
-            transparent 50%
-          ),
-          radial-gradient(
-            circle at 75% 75%,
-            rgba(255, 255, 255, 0.1) 0%,
-            transparent 50%
-          );
-        animation: float 6s ease-in-out infinite;
-        pointer-events: none;
-      }
-
-      @keyframes float {
-        0%,
-        100% {
-          transform: translateY(0px);
+        body {
+            touch-action: manipulation;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            -webkit-user-select: none;
+            user-select: none;
         }
-        50% {
-          transform: translateY(-20px);
+        .number-cell { 
+            transition: all 0.2s ease; 
+            -webkit-tap-highlight-color: transparent;
+            min-height: 50px;
+            font-size: 18px;
         }
-      }
-
-      .container {
-        text-align: center;
-        max-width: 800px;
-        padding: 2rem;
-        background: rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(10px);
-        border-radius: 20px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        animation: fadeIn 1.5s ease-out;
-      }
-
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: translateY(30px);
+        @media (max-width: 400px) {
+            .number-cell {
+                min-height: 40px;
+                font-size: 16px;
+            }
         }
-        to {
-          opacity: 1;
-          transform: translateY(0);
+        .number-cell:active { 
+            transform: scale(0.98); 
         }
-      }
-
-      h1 {
-        color: #ff6b9d;
-        font-size: 2.5rem;
-        margin-bottom: 1.5rem;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-        animation: heartbeat 2s ease-in-out infinite;
-      }
-
-      @keyframes heartbeat {
-        0%,
-        100% {
-          transform: scale(1);
+        .confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
         }
-        50% {
-          transform: scale(1.05);
+        .encouragement-text {
+            animation: bounce 2s infinite;
         }
-      }
-
-      .image-container {
-        position: relative;
-        display: inline-block;
-        margin: 2rem 0;
-        border-radius: 20px;
-        overflow: hidden;
-        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
-        animation: pulse 3s ease-in-out infinite;
-      }
-
-      @keyframes pulse {
-        0%,
-        100% {
-          transform: scale(1);
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
         }
-        50% {
-          transform: scale(1.02);
+        /* 微信适配 */
+        .wechat-tip {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
         }
-      }
-
-      .image-container img {
-        max-width: 100%;
-        height: auto;
-        max-height: 400px;
-        display: block;
-        border-radius: 20px;
-      }
-
-      .audio-container {
-        margin-top: 2rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 1rem;
-      }
-
-      .music-icon {
-        font-size: 1.5rem;
-        color: #ff6b9d;
-        animation: rotation 2s infinite linear;
-      }
-
-      @keyframes rotation {
-        from {
-          transform: rotate(0deg);
-        }
-        to {
-          transform: rotate(360deg);
-        }
-      }
-
-      audio {
-        width: 300px;
-        height: 40px;
-        outline: none;
-      }
-
-      audio::-webkit-media-controls-panel {
-        background-color: rgba(255, 255, 255, 0.8);
-        border-radius: 20px;
-      }
-
-      .hearts {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        overflow: hidden;
-      }
-
-      .heart {
-        position: absolute;
-        color: #ff6b9d;
-        font-size: 20px;
-        animation: fall 3s linear infinite;
-        opacity: 0.7;
-      }
-
-      @keyframes fall {
-        0% {
-          transform: translateY(-100px) rotate(0deg);
-          opacity: 1;
-        }
-        100% {
-          transform: translateY(100vh) rotate(360deg);
-          opacity: 0;
-        }
-      }
-
-      .subtitle {
-        color: #ff6b9d;
-        font-size: 1.2rem;
-        margin-top: 1rem;
-        font-style: italic;
-        opacity: 0.9;
-      }
-
-      /* 待办事项样式 */
-      .todo-section {
-        margin-top: 3rem;
-        padding-top: 2rem;
-        border-top: 2px solid rgba(255, 107, 157, 0.3);
-      }
-
-      .todo-title {
-        color: #ff6b9d;
-        font-size: 1.8rem;
-        margin-bottom: 1.5rem;
-        font-weight: bold;
-      }
-
-      .todo-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-      }
-
-      .todo-item {
-        background: rgba(255, 255, 255, 0.3);
-        border-radius: 15px;
-        padding: 1rem 1.5rem;
-        margin: 1rem 0;
-        color: #ff6b9d;
-        font-size: 1.1rem;
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        transition: all 0.3s ease;
-        box-shadow: 0 5px 15px rgba(255, 107, 157, 0.1);
-      }
-
-      .todo-item:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(255, 107, 157, 0.2);
-        background: rgba(255, 255, 255, 0.4);
-      }
-
-      .todo-icon {
-        font-size: 1.5rem;
-        animation: bounce 2s ease-in-out infinite;
-      }
-
-      @keyframes bounce {
-        0%,
-        100% {
-          transform: translateY(0);
-        }
-        50% {
-          transform: translateY(-5px);
-        }
-      }
-
-      /* 爱情小游戏样式 */
-      .love-game-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(
-          135deg,
-          rgba(255, 154, 158, 0.95) 0%,
-          rgba(254, 207, 239, 0.95) 50%,
-          rgba(254, 207, 239, 0.95) 100%
-        );
-        backdrop-filter: blur(10px);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10000;
-        animation: fadeIn 1s ease-out;
-      }
-
-      .love-game-container {
-        text-align: center;
-        background: rgba(255, 255, 255, 0.3);
-        backdrop-filter: blur(15px);
-        border-radius: 30px;
-        padding: 3rem 2rem;
-        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
-        border: 2px solid rgba(255, 255, 255, 0.4);
-        max-width: 500px;
-        width: 90%;
-        animation: scaleIn 0.8s ease-out;
-      }
-
-      @keyframes scaleIn {
-        from {
-          opacity: 0;
-          transform: scale(0.8);
-        }
-        to {
-          opacity: 1;
-          transform: scale(1);
-        }
-      }
-
-      .love-game-title {
-        color: #ff6b9d;
-        font-size: 2.5rem;
-        margin-bottom: 2rem;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-        animation: heartbeat 2s ease-in-out infinite;
-      }
-
-      .love-game-question {
-        color: #ff6b9d;
-        font-size: 1.5rem;
-        margin-bottom: 2.5rem;
-        font-weight: bold;
-        line-height: 1.4;
-      }
-
-      .love-game-buttons {
-        display: flex;
-        gap: 2rem;
-        justify-content: center;
-        align-items: center;
-        flex-wrap: wrap;
-      }
-
-      .love-btn, .no-love-btn {
-        padding: 1rem 2rem;
-        border: none;
-        border-radius: 25px;
-        font-size: 1.2rem;
-        font-weight: bold;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-        backdrop-filter: blur(10px);
-        border: 2px solid rgba(255, 255, 255, 0.3);
-      }
-
-      .love-btn {
-        background: linear-gradient(135deg, #ff6b9d, #ff9a9e);
-        color: white;
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
-        animation: pulse 2s ease-in-out infinite;
-      }
-
-      .love-btn:hover {
-        transform: translateY(-3px) scale(1.05);
-        box-shadow: 0 15px 30px rgba(255, 107, 157, 0.3);
-        background: linear-gradient(135deg, #ff5a8a, #ff8b8f);
-      }
-
-      .no-love-btn {
-        background: rgba(255, 255, 255, 0.6);
-        color: #ff6b9d;
-        position: relative;
-        overflow: hidden;
-      }
-
-      .no-love-btn:hover {
-        background: rgba(255, 255, 255, 0.8);
-        transform: translateY(-2px);
-        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
-      }
-
-      .love-btn.grow {
-        animation: growBig 0.5s ease-out forwards;
-      }
-
-      @keyframes growBig {
-        to {
-          transform: scale(1.3);
-          font-size: 1.4rem;
-          padding: 1.2rem 2.5rem;
-        }
-      }
-
-      .shake {
-        animation: shake 0.5s ease-in-out;
-      }
-
-      @keyframes shake {
-        0%, 100% { transform: translateX(0); }
-        25% { transform: translateX(-10px); }
-        75% { transform: translateX(10px); }
-      }
-
-      .main-content {
-        display: none;
-      }
-
-      .main-content.show {
-        display: block;
-        animation: fadeInUp 1s ease-out;
-      }
-
-      @keyframes fadeInUp {
-        from {
-          opacity: 0;
-          transform: translateY(30px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      /* 响应式设计 */
-      @media (max-width: 768px) {
-        .container {
-          margin: 1rem;
-          padding: 1.5rem;
-        }
-
-        h1 {
-          font-size: 2rem;
-        }
-
-        .audio-container {
-          flex-direction: column;
-          gap: 0.5rem;
-        }
-
-        audio {
-          width: 250px;
-        }
-
-        .love-game-container {
-          padding: 2rem 1.5rem;
-        }
-
-        .love-game-title {
-          font-size: 2rem;
-        }
-
-        .love-game-question {
-          font-size: 1.3rem;
-        }
-
-        .love-game-buttons {
-          flex-direction: column;
-          gap: 1.5rem;
-        }
-
-        .love-btn, .no-love-btn {
-          width: 100%;
-          max-width: 200px;
-        }
-      }
     </style>
-  </head>
-  <body>
-    <!-- 爱情小游戏弹窗 -->
-    <div class="love-game-overlay" id="loveGameOverlay">
-      <div class="love-game-container">
-        <h1 class="love-game-title">💖 小宝贝 💖</h1>
-        <p class="love-game-question">
-          你爱我吗？💕<br>
-          <small style="font-size: 0.9em; opacity: 0.8;">（请诚实回答哦～）</small>
-        </p>
-        <div class="love-game-buttons">
-          <button class="love-btn" id="loveBtn" onclick="chooseLove()">
-            💖 爱你 💖
-          </button>
-          <button class="no-love-btn" id="noLoveBtn" onclick="chooseNoLove()">
-            💔 不爱 💔
-          </button>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen flex flex-col items-center justify-center p-2">
+    <div class="confetti-container" id="confetti-container"></div>
+    
+    <div class="w-full max-w-md bg-white rounded-xl shadow-lg overflow-hidden mx-auto">
+        <!-- 音效开关 -->
+        <div class="bg-gray-50 p-2 flex justify-end items-center">
+            <button id="sound-toggle" class="flex items-center text-gray-500 hover:text-blue-500 transition-colors p-1 rounded">
+                <i class="fa fa-volume-off mr-1" id="sound-icon"></i>
+                <span class="text-xs">音效</span>
+            </button>
         </div>
-      </div>
+        
+        <!-- 标题区 -->
+        <div class="bg-blue-500 text-white p-4">
+            <h1 class="text-center font-bold text-xl flex items-center justify-center">
+                <i class="fa fa-trophy mr-2 text-yellow-300"></i>
+                数字点击挑战
+            </h1>
+            <p class="text-center text-sm text-blue-100 mt-1">40秒内按顺序点击1-25</p>
+        </div>
+        
+        <!-- 数据统计 -->
+        <div class="grid grid-cols-3 gap-2 p-3 bg-gray-50 border-b border-gray-200">
+            <div class="text-center">
+                <div class="text-xs text-gray-500">当前目标</div>
+                <div id="current-number" class="text-xl font-bold text-blue-500">1</div>
+            </div>
+            <div class="text-center">
+                <div class="text-xs text-gray-500">剩余时间</div>
+                <div id="timer" class="text-xl font-bold text-red-500">40</div>
+            </div>
+            <div class="text-center">
+                <div class="text-xs text-gray-500">最终得分</div>
+                <div id="score" class="text-xl font-bold text-purple-500">0</div>
+            </div>
+        </div>
+        
+        <!-- 游戏内容 -->
+        <div class="p-3">
+            <!-- 开始界面 -->
+            <div id="start-screen" class="text-center py-6">
+                <h2 class="font-bold text-lg mb-3">准备开始挑战</h2>
+                <p class="text-sm text-gray-600 mb-5 px-4">按顺序点击1到25，越快越准确得分越高！</p>
+                <button id="start-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full shadow transform hover:scale-105 transition duration-200">
+                    <i class="fa fa-play mr-2"></i> 开始挑战
+                </button>
+            </div>
+            
+            <!-- 游戏网格 -->
+            <div id="game-grid" class="grid grid-cols-5 gap-2 hidden"></div>
+            
+            <!-- 结束界面 -->
+            <div id="end-screen" class="text-center py-6 hidden">
+                <div id="perfect-score-icon" class="hidden w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa fa-star text-white text-2xl"></i>
+                </div>
+                <div id="excellent-icon" class="hidden w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa fa-trophy text-white text-2xl"></i>
+                </div>
+                <div id="good-icon" class="hidden w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa fa-check text-white text-2xl"></i>
+                </div>
+                <div id="no-score-icon" class="w-16 h-16 bg-gray-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa fa-times text-white text-2xl"></i>
+                </div>
+                
+                <h2 id="end-message" class="font-bold text-xl mb-2">挑战结束</h2>
+                <p class="text-gray-700 mb-1 text-lg">最终得分: <span id="final-score" class="font-bold text-purple-500 text-3xl">0</span></p>
+                <p id="encouragement" class="text-green-500 font-bold text-base mb-3 hidden encouragement-text">加油！你一定可以的！</p>
+                <p class="text-sm text-gray-500 mb-5">用时 <span id="used-time">0</span> 秒 | 点击 <span id="click-count">0</span> 次 | 完成至 <span id="complete-to">0</span></p>
+                
+                <button id="restart-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full shadow transform hover:scale-105 transition duration-200">
+                    <i class="fa fa-refresh mr-2"></i> 再次挑战
+                </button>
+            </div>
+            
+            <!-- 高分榜 -->
+            <div id="high-scores-container" class="mt-4 p-3 bg-gray-50 rounded-lg"></div>
+        </div>
     </div>
-
-    <!-- 飘落的爱心动画 -->
-    <div class="hearts">
-      <div class="heart" style="left: 10%; animation-delay: 0s">💕</div>
-      <div class="heart" style="left: 20%; animation-delay: 1s">❤️</div>
-      <div class="heart" style="left: 30%; animation-delay: 2s">💖</div>
-      <div class="heart" style="left: 40%; animation-delay: 0.5s">💝</div>
-      <div class="heart" style="left: 50%; animation-delay: 1.5s">💗</div>
-      <div class="heart" style="left: 60%; animation-delay: 2.5s">💕</div>
-      <div class="heart" style="left: 70%; animation-delay: 0.8s">❤️</div>
-      <div class="heart" style="left: 80%; animation-delay: 1.8s">💖</div>
-      <div class="heart" style="left: 90%; animation-delay: 2.2s">💝</div>
-    </div>
-
-    <div class="container main-content" id="mainContent">
-      <!-- 歌曲 -->
-      <p class="subtitle">就是爱你💕</p>
-      <div class="audio-container">
-        <span class="music-icon">🎵</span>
-        <audio controls autoplay loop preload="auto" playsinline>
-          <source src="./audio/就是爱你.mp3" type="audio/mpeg" />
-        </audio>
-        <span class="music-icon">🎵</span>
-      </div>
-      <hr />
-
-      <p class="subtitle">2025.8.13</p>
-      <h1>💖 这是我的宝宝 💖</h1>
-
-      <div class="image-container">
-        <img src="./img/她.jpg" alt="我的宝贝" />
-      </div>
-
-      <p class="subtitle">
-        故事发生在2025年的8月13号，我们在一起啦（其实认识也有10年了😁） 💕
-      </p>
-      <hr />
-      <p class="subtitle">8.13~~~9.30 待更新🤭</p>
-      <hr />
-      <p class="subtitle">2025.10.1</p>
-
-      <div class="image-container">
-        <img src="./img/2025-10-01.jpg" alt="线下见面" />
-      </div>
-
-      <p class="subtitle">
-        这一天国庆回家，由于没有买到高铁只能坐大巴回家，
-        差点没有赶上车，不过还好坐上车了，坐了一天但是想到马上就要见面还是很开心😚，她一直担心见面可能会有点尴尬，
-        不过还好处的很自然✌
-      </p>
-      <hr />
-      <p class="subtitle">2025.10.2</p>
-
-      <div class="image-container">
-        <img src="./img/2025-10-02-海底捞.jpg" alt="海底捞吃饭" />
-      </div>
-      <div class="image-container">
-        <img src="./img/2025-10-02-02大长腿.jpg" alt="给她买衣服" />
-      </div>
-
-      <p class="subtitle">
-        这一天逛了超市🏬，修了表⌚，还打了麻将🀄，还去了海底捞🫕，还买了衣服👗，今天把她累坏了😘。
-      </p>
-      <hr />
-      <p class="subtitle">2025.10.3</p>
-
-      <div class="image-container">
-        <img src="./img/2025-10-03.jpg" alt="我做的饭" />
-      </div>
-
-      <p class="subtitle">
-        这一天她回老家了，给我摘了一大袋柿子（我忘记拍照了🙈），我吃了一个生的，挺瑟的，只能等明年再吃熟的了，
-        这一天晚上我原本想露一手做个饭，结果自己变成了黄磊😵‍💫，下次一定让她尝尝😏
-      </p>
-      <hr />
-      <p class="subtitle">2025.10.4</p>
-      <div class="image-container">
-        <img src="./img/20251010b.jpg" alt="红柚" />
-      </div>
-      <div class="image-container">
-        <img src="./img/2025-10-04.jpg" alt="画小兔子" />
-      </div>
-      <div class="image-container">
-        <img src="./img/2025-10-0402.jpg" alt="祈福" />
-      </div>
-      <div class="image-container">
-        <img src="./img/20251010a.jpg" alt="祈福" />
-      </div>
-      <div class="image-container">
-        <img src="./img/2025-10-06.jpg" alt="胡辣汤" />
-      </div>
-
-      <p class="subtitle">
-        这一天我俩到驻马店逛了逛，感觉时间都浪费到路上了，（可能是我剥柚子时间有点长😅），第一次陪她画娃娃🐇，把兔子脸画紫了，不好看吗？
-        我觉得其实还可以，等这次回家还拿给她🤭。晚上回到汝南买了对戒指💍和项链绳子📿，可惜也没有拍到照片😣。等过年回家还要让她给我买淀粉肠🌭
-      </p>
-      <hr />
-      <p class="subtitle">2025.10.7</p>
-
-      <div class="image-container">
-        <img src="./img/2025-10-07.jpg" alt="牵手" />
-      </div>
-      <div class="image-container">
-        <img src="./img/2025100702.jpg" alt="植物" />
-      </div>
-      <p class="subtitle">
-        最后几天了，根本舍不得走，愉快的日子就是这么短暂😣，回来这几天也没有买花，走之前给她买了两盆盆栽🪴
-      </p>
-      <hr />
-
-      <p class="subtitle">2025.10.10</p>
-
-      <div class="image-container">
-        <img src="./img/2025-10-10.jpg" alt="草莓熊" />
-      </div>
-
-      <p class="subtitle">给她买的草莓熊🐻，她说很像我🤭</p>
-      <hr />
-      <p class="subtitle">2025.10.11</p>
-
-      <div class="image-container">
-        <img src="./img/睡衣.jpg" alt="我们的情侣睡衣" />
-      </div>
-
-      <p class="subtitle">
-        虽然回家没有买到情侣衣服，但是我们买了情侣睡衣，哈哈哈哈哈，浅浅期待一下穿上的效果
-        😊
-      </p>
-
-      <hr />
-
-      <!-- 待办事项列表 -->
-      <div class="todo-section">
-        <h2 class="todo-title">💝 未来的小心愿 💝</h2>
-        <ul class="todo-list">
-          <li class="todo-item">
-            <span class="todo-icon">⛷️</span>
-            <span>去北京颐和园滑冰</span>
-          </li>
-
-          <li class="todo-item">
-            <span class="todo-icon">💈</span>
-            <span>过年一起烫头</span>
-          </li>
-
-          <li class="todo-item">
-            <span class="todo-icon">🏖️</span>
-            <span>去海边手牵手漫步沙滩</span>
-          </li>
-        </ul>
-      </div>
-    </div>
+    
+    <footer class="mt-4 text-center text-gray-500 text-xs">
+        <p>© 2025 数字点击挑战 | 微信适配版</p>
+    </footer>
 
     <script>
-      let heartsInterval;
-      let audio;
-      let autoplayAttempted = false;
-      let noLoveClickCount = 0;
-
-      // 智能自动播放函数
-      async function attemptAutoplay() {
-        if (autoplayAttempted) return;
-        autoplayAttempted = true;
-
-        audio = document.querySelector("audio");
-
-        try {
-          // 方法1: 直接尝试播放
-          await audio.play();
-          updatePageTitle("🎵 音乐播放中 - 我的宝贝 💖");
-          console.log("音频自动播放成功！");
-          return true;
-        } catch (error) {
-          console.log("直接播放失败，尝试静音播放:", error);
-
-          try {
-            // 方法2: 静音播放然后逐渐增加音量
-            audio.muted = true;
-            audio.volume = 0.7; // 设置音量但静音
-            await audio.play();
-            console.log("静音播放成功，延迟后取消静音");
-
-            // 延迟一小段时间后取消静音
-            setTimeout(() => {
-              if (audio && !audio.paused) {
-                audio.muted = false;
-                updatePageTitle("🎵 音乐播放中 - 我的宝贝 💖");
-                console.log("已取消静音，音频应该可以听到了");
-              }
-            }, 500);
-
-            return true;
-          } catch (error2) {
-            console.log("静音播放也失败:", error2);
-
-            // 方法3: 添加用户交互监听
-            setupUserInteractionListener();
-            return false;
-          }
-        }
-      }
-
-      // 更新页面标题
-      function updatePageTitle(title) {
-        document.title = title;
-      }
-
-      // 设置用户交互监听（作为后备方案）
-      function setupUserInteractionListener() {
-        const events = ["click", "touchstart", "keydown", "mousemove"];
-
-        function startAudioOnInteraction() {
-          if (audio && audio.paused) {
-            audio.muted = false;
-            audio.volume = 0.7;
-            audio
-              .play()
-              .then(() => {
-                updatePageTitle("🎵 音乐播放中 - 我的宝贝 💖");
-                console.log("用户交互后播放成功");
-                // 移除事件监听器
-                events.forEach((event) => {
-                  document.removeEventListener(event, startAudioOnInteraction);
+        // 微信环境检测
+        const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+        let soundEnabled = false; // 微信默认关闭音效
+        let gameStarted = false;
+        let currentNumber = 1;
+        let totalTime = 40;
+        let remainingTime = totalTime;
+        let finalScore = 0;
+        let timerInterval;
+        let clickHistory = [];
+        
+        // 音频资源（微信延迟加载）
+        let sounds = {};
+        
+        // DOM元素
+        const startScreen = document.getElementById('start-screen');
+        const gameGrid = document.getElementById('game-grid');
+        const endScreen = document.getElementById('end-screen');
+        const startButton = document.getElementById('start-button');
+        const restartButton = document.getElementById('restart-button');
+        const currentNumberEl = document.getElementById('current-number');
+        const timerEl = document.getElementById('timer');
+        const scoreEl = document.getElementById('score');
+        const finalScoreEl = document.getElementById('final-score');
+        const endMessageEl = document.getElementById('end-message');
+        const usedTimeEl = document.getElementById('used-time');
+        const clickCountEl = document.getElementById('click-count');
+        const completeToEl = document.getElementById('complete-to');
+        const soundToggle = document.getElementById('sound-toggle');
+        const soundIcon = document.getElementById('sound-icon');
+        const encouragementText = document.getElementById('encouragement');
+        
+        const perfectScoreIcon = document.getElementById('perfect-score-icon');
+        const excellentIcon = document.getElementById('excellent-icon');
+        const goodIcon = document.getElementById('good-icon');
+        const noScoreIcon = document.getElementById('no-score-icon');
+        
+        // 微信音频初始化（用户交互后加载）
+        function initSounds() {
+            if (soundEnabled && Object.keys(sounds).length === 0) {
+                sounds = {
+                    click: new Audio('https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3'),
+                    complete: new Audio('https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3'),
+                    success: new Audio('https://assets.mixkit.co/sfx/preview/mixkit-positive-notification-937.mp3')
+                };
+                
+                // 微信音频预加载
+                Object.values(sounds).forEach(sound => {
+                    sound.preload = 'auto';
+                    sound.volume = 0.3;
                 });
-              })
-              .catch((error) => {
-                console.log("用户交互后播放仍然失败:", error);
-              });
-          }
+            }
         }
-
-        // 添加多种事件监听
-        events.forEach((event) => {
-          document.addEventListener(event, startAudioOnInteraction, {
-            once: true,
-          });
+        
+        // 播放音效（微信兼容）
+        const playSound = (soundName) => {
+            if (!soundEnabled || !sounds[soundName]) return;
+            
+            try {
+                const sound = sounds[soundName].cloneNode();
+                sound.play().catch(e => {
+                    // 微信播放失败时静默处理
+                    console.log('微信音效播放限制:', e);
+                });
+            } catch (e) {}
+        };
+        
+        // 音效开关切换
+        soundToggle.addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            
+            if (soundEnabled) {
+                soundIcon.className = 'fa fa-volume-up mr-1';
+                soundToggle.classList.add('text-blue-500');
+                initSounds(); // 用户交互后初始化音频
+            } else {
+                soundIcon.className = 'fa fa-volume-off mr-1';
+                soundToggle.classList.remove('text-blue-500');
+            }
         });
-
-        console.log("已设置用户交互监听，任何交互都会开始播放音频");
-      }
-
-      // 动态生成更多飘落的爱心
-      function createHeart() {
-        const hearts = ["💕", "❤️", "💖", "💝", "💗", "💓", "💞", "💟"];
-        const heart = document.createElement("div");
-        heart.className = "heart";
-        heart.textContent = hearts[Math.floor(Math.random() * hearts.length)];
-        heart.style.left = Math.random() * 100 + "%";
-        heart.style.animationDuration = Math.random() * 3 + 2 + "s";
-        heart.style.fontSize = Math.random() * 10 + 15 + "px";
-
-        document.querySelector(".hearts").appendChild(heart);
-
-        // 移除已经落下的爱心
-        setTimeout(() => {
-          heart.remove();
-        }, 5000);
-      }
-
-      // 爱情小游戏函数
-      function chooseLove() {
-        // 播放成功音效（如果有的话）
-        const overlay = document.getElementById('loveGameOverlay');
-        const mainContent = document.getElementById('mainContent');
         
-        // 添加消失动画
-        overlay.style.animation = 'fadeOut 0.8s ease-out forwards';
+        // 烟花特效
+        const launchConfetti = () => {
+            const duration = 5000;
+            const animationEnd = Date.now() + duration;
+            
+            const randomInRange = (min, max) => Math.random() * (max - min) + min;
+            
+            const interval = setInterval(() => {
+                const timeLeft = animationEnd - Date.now();
+                if (timeLeft <= 0) return clearInterval(interval);
+                
+                const particleCount = 30 * (timeLeft / duration);
+                
+                confetti({
+                    particleCount,
+                    startVelocity: 25,
+                    spread: 360,
+                    origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+                    colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00']
+                });
+                
+                confetti({
+                    particleCount,
+                    startVelocity: 25,
+                    spread: 360,
+                    origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+                    colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00']
+                });
+            }, 300);
+        };
         
-        setTimeout(() => {
-          overlay.style.display = 'none';
-          mainContent.classList.add('show');
-          
-          // 开始音频播放和动画
-          heartsInterval = setInterval(createHeart, 800);
-          attemptAutoplay();
-        }, 800);
-      }
-
-      function chooseNoLove() {
-        noLoveClickCount++;
-        const loveBtn = document.getElementById('loveBtn');
-        const noLoveBtn = document.getElementById('noLoveBtn');
-        const gameContainer = document.querySelector('.love-game-container');
+        // 生成随机数字
+        const generateRandomNumbers = () => {
+            const numbers = Array.from({length: 25}, (_, i) => i + 1);
+            for (let i = numbers.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+            }
+            return numbers;
+        };
         
-        // 让"爱"按钮变大
-        loveBtn.classList.add('grow');
+        // 创建游戏网格
+        const createGameGrid = () => {
+            gameGrid.innerHTML = '';
+            const numbers = generateRandomNumbers();
+            
+            numbers.forEach(num => {
+                const cell = document.createElement('div');
+                cell.className = 'number-cell bg-gray-100 hover:bg-gray-200 rounded-md flex items-center justify-center font-bold cursor-pointer shadow-sm';
+                cell.dataset.number = num;
+                cell.textContent = num;
+                
+                // 统一点击处理
+                const handleInteraction = () => {
+                    if (!gameStarted) return;
+                    
+                    playSound('click');
+                    const number = parseInt(cell.dataset.number);
+                    clickHistory.push(number);
+                    
+                    if (number === currentNumber) {
+                        playSound('success');
+                        currentNumber++;
+                        currentNumberEl.textContent = currentNumber <= 25 ? currentNumber : '-';
+                        
+                        if (currentNumber > 25) {
+                            playSound('complete');
+                            endGame();
+                        }
+                    }
+                };
+                
+                // 绑定所有事件类型
+                cell.addEventListener('click', handleInteraction);
+                cell.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    handleInteraction();
+                }, {passive: false});
+                cell.addEventListener('touchend', (e) => e.preventDefault(), {passive: false});
+                
+                gameGrid.appendChild(cell);
+            });
+        };
         
-        // 让整个容器震动
-        gameContainer.classList.add('shake');
+        // 计算得分
+        const calculateScore = () => {
+            const isCompleted = currentNumber > 25;
+            const usedTime = totalTime - remainingTime;
+            const clickCount = clickHistory.length;
+            
+            if (!isCompleted) return 0;
+            
+            if (usedTime <= 20 && clickCount === 25) return 100;
+            else if (usedTime <= 25 && clickCount <= 27) return 90;
+            else if (usedTime <= 30 && clickCount <= 29) return 80;
+            else if (usedTime <= 35 && clickCount <= 30) return 70;
+            else if (usedTime <= 40 && clickCount <= 33) return 60;
+            else return 50;
+        };
         
-        // 更新问题文本，变得更加调皮
-        const question = document.querySelector('.love-game-question');
-        const messages = [
-          '真的不爱我吗？😢<br><small style="font-size: 0.9em; opacity: 0.8;">（再想想嘛～）</small>',
-          '不可能！你一定是爱我的！💕<br><small style="font-size: 0.9em; opacity: 0.8;">（点错了对不对？）</small>',
-          '我不信！你肯定爱我！😤<br><small style="font-size: 0.9em; opacity: 0.8;">（快点击爱我吧！）</small>',
-          '你看，爱的按钮都变大了！💖<br><small style="font-size: 0.9em; opacity: 0.8;">（这是命运的暗示！）</small>',
-          '不许不爱我！😭<br><small style="font-size: 0.9em; opacity: 0.8;">（快点击爱我，不然我要哭了！）</small>'
-        ];
+        // 更新计时器
+        const updateTimer = () => {
+            remainingTime--;
+            timerEl.textContent = remainingTime;
+            
+            if (remainingTime <= 10) {
+                timerEl.classList.add('animate-pulse');
+                timerEl.classList.add('text-red-600');
+            }
+            
+            if (remainingTime <= 0) {
+                endGame();
+            }
+        };
         
-        if (noLoveClickCount <= messages.length) {
-          question.innerHTML = messages[Math.min(noLoveClickCount - 1, messages.length - 1)];
+        // 开始游戏
+        const startGame = () => {
+            // 微信首次点击初始化音效
+            if (isWeChat && soundEnabled && Object.keys(sounds).length === 0) {
+                initSounds();
+            }
+            
+            currentNumber = 1;
+            remainingTime = totalTime;
+            clickHistory = [];
+            gameStarted = true;
+            
+            currentNumberEl.textContent = currentNumber;
+            timerEl.textContent = remainingTime;
+            timerEl.classList.remove('animate-pulse', 'text-red-600');
+            scoreEl.textContent = "0";
+            
+            createGameGrid();
+            startScreen.classList.add('hidden');
+            endScreen.classList.add('hidden');
+            gameGrid.classList.remove('hidden');
+            
+            clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 1000);
+            
+            playSound('click');
+        };
+        
+        // 结束游戏
+        const endGame = () => {
+            gameStarted = false;
+            clearInterval(timerInterval);
+            
+            finalScore = calculateScore();
+            const isCompleted = currentNumber > 25;
+            const usedTime = totalTime - remainingTime;
+            
+            finalScoreEl.textContent = finalScore;
+            usedTimeEl.textContent = usedTime;
+            clickCountEl.textContent = clickHistory.length;
+            completeToEl.textContent = currentNumber - 1;
+            
+            encouragementText.classList.toggle('hidden', finalScore !== 0);
+            
+            if (finalScore === 100) {
+                launchConfetti();
+            }
+            
+            if (isCompleted) {
+                endMessageEl.textContent = finalScore === 100 ? "完美极速通关！" : "挑战完成！";
+                perfectScoreIcon.classList.toggle('hidden', finalScore !== 100);
+                excellentIcon.classList.toggle('hidden', finalScore < 90 || finalScore === 100);
+                goodIcon.classList.toggle('hidden', finalScore < 60 || finalScore >= 90);
+                noScoreIcon.classList.add('hidden');
+                saveHighScore(finalScore);
+            } else {
+                endMessageEl.textContent = "时间到！未完成挑战";
+                perfectScoreIcon.classList.add('hidden');
+                excellentIcon.classList.add('hidden');
+                goodIcon.classList.add('hidden');
+                noScoreIcon.classList.remove('hidden');
+            }
+            
+            gameGrid.classList.add('hidden');
+            endScreen.classList.remove('hidden');
+            
+            setTimeout(() => {
+                endScreen.classList.add('hidden');
+                startScreen.classList.remove('hidden');
+                showHighScores();
+            }, 5000);
+        };
+        
+        // 保存高分记录
+        const saveHighScore = (score) => {
+            try {
+                const highScores = JSON.parse(localStorage.getItem('numberGameHighScores') || '[]');
+                
+                highScores.push({
+                    score: score,
+                    date: new Date().toISOString(),
+                    time: totalTime - remainingTime,
+                    clicks: clickHistory.length
+                });
+                
+                highScores.sort((a, b) => b.score - a.score).splice(10);
+                localStorage.setItem('numberGameHighScores', JSON.stringify(highScores));
+            } catch (e) {}
+        };
+        
+        // 显示高分榜
+        const showHighScores = () => {
+            const container = document.getElementById('high-scores-container');
+            const highScores = JSON.parse(localStorage.getItem('numberGameHighScores') || '[]');
+            
+            let html = `
+                <h3 class="text-sm font-bold mb-2 flex items-center">
+                    <i class="fa fa-trophy text-yellow-500 mr-1"></i> 历史最高分
+                </h3>
+            `;
+            
+            if (highScores.length === 0) {
+                html += '<p class="text-xs text-gray-500 text-center py-2">暂无游戏记录</p>';
+            } else {
+                html += '<div class="grid grid-cols-4 gap-1 text-xs mb-2">';
+                html += '<div class="font-bold bg-gray-100 p-1 rounded">排名</div>';
+                html += '<div class="font-bold bg-gray-100 p-1 rounded">得分</div>';
+                html += '<div class="font-bold bg-gray-100 p-1 rounded">用时</div>';
+                html += '<div class="font-bold bg-gray-100 p-1 rounded">日期</div>';
+                
+                highScores.forEach((score, index) => {
+                    const date = new Date(score.date);
+                    const formattedDate = `${date.getMonth()+1}/${date.getDate()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+                    
+                    const rankStyle = index === 0 
+                        ? 'bg-yellow-50 text-yellow-600 font-bold' 
+                        : index === 1 
+                            ? 'bg-gray-100 text-gray-600 font-bold' 
+                            : index === 2 
+                                ? 'bg-amber-50 text-amber-600 font-bold' 
+                                : 'bg-white';
+                    
+                    html += `<div class="text-center p-1 rounded ${rankStyle}">${index+1}</div>`;
+                    html += `<div class="text-center p-1 font-bold text-purple-500">${score.score}</div>`;
+                    html += `<div class="text-center p-1">${score.time}s</div>`;
+                    html += `<div class="text-center p-1 text-gray-500">${formattedDate}</div>`;
+                });
+                
+                html += '</div>';
+                html += `
+                    <button id="clear-scores" class="mt-2 text-xs text-gray-500 hover:text-red-500 flex items-center justify-center py-1">
+                        <i class="fa fa-trash-o mr-1"></i> 清空记录
+                    </button>
+                `;
+            }
+            
+            container.innerHTML = html;
+            
+            const clearBtn = document.getElementById('clear-scores');
+            if (clearBtn) {
+                clearBtn.addEventListener('click', () => {
+                    if (confirm('确定清空记录？')) {
+                        localStorage.removeItem('numberGameHighScores');
+                        showHighScores();
+                        playSound('click');
+                    }
+                });
+            }
+        };
+        
+        // 绑定事件（微信需要用户交互）
+        startButton.addEventListener('click', startGame);
+        restartButton.addEventListener('click', startGame);
+        
+        // 微信滚动锁定
+        if (isWeChat) {
+            document.addEventListener('touchmove', (e) => {
+                if (gameStarted) e.preventDefault();
+            }, {passive: false});
         }
         
-        // 如果点击次数过多，让"不爱"按钮开始缩小
-        if (noLoveClickCount > 3) {
-          noLoveBtn.style.transform = `scale(${Math.max(0.5, 1 - (noLoveClickCount - 3) * 0.1)})`;
-          noLoveBtn.style.opacity = Math.max(0.3, 1 - (noLoveClickCount - 3) * 0.1);
-        }
+        // 初始化
+        showHighScores();
         
-        // 移除动画类，以便下次可以重新触发
-        setTimeout(() => {
-          loveBtn.classList.remove('grow');
-          gameContainer.classList.remove('shake');
-        }, 500);
-      }
-
-      // 添加淡出动画
-      const fadeOutKeyframes = `
-        @keyframes fadeOut {
-          from {
-            opacity: 1;
-            transform: scale(1);
-          }
-          to {
-            opacity: 0;
-            transform: scale(0.9);
-          }
+        // 微信提示（可选）
+        if (isWeChat) {
+            console.log('微信环境，已启用兼容模式');
         }
-      `;
-      
-      // 动态添加CSS动画
-      const style = document.createElement('style');
-      style.textContent = fadeOutKeyframes;
-      document.head.appendChild(style);
-
-      // 页面加载完成后的初始化
-      document.addEventListener("DOMContentLoaded", function () {
-        // 不立即开始动画，等待用户选择"爱"
-        console.log("页面初始化完成，等待用户互动");
-      });
     </script>
-  </body>
+</body>
 </html>
